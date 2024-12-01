@@ -2,8 +2,10 @@ package com.ahold.ctp.service
 
 import com.ahold.ctp.dto.CreateDeliveryRequest
 import com.ahold.ctp.dto.DeliveryResponse
+import com.ahold.ctp.dto.UpdateDeliveryRequest
 import com.ahold.ctp.model.Delivery
 import com.ahold.ctp.repository.DeliveryRepository
+import org.hibernate.event.internal.DefaultLoadEventListener
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.OffsetDateTime
@@ -31,5 +33,22 @@ class DeliveryService(@Autowired private val deliveryRepository:DeliveryReposito
             status = savedDelivery.status
         )
     }
+
+    //busines logic to update the fields
+    fun updateDelivery(id:UUID, request: UpdateDeliveryRequest)
+                :DeliveryResponse{
+        //only finsihed at and status == DELIVERED
+
+        return DeliveryResponse(
+            id=UUID.randomUUID(),
+            finishedAt = "",
+            status = "",
+            startedAt = "",
+            vehicleId = ""
+
+        )
+    }
+
+
 
 }

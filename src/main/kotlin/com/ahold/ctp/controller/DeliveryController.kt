@@ -2,16 +2,15 @@ package com.ahold.ctp.controller
 
 import com.ahold.ctp.dto.CreateDeliveryRequest
 import com.ahold.ctp.dto.DeliveryResponse
+import com.ahold.ctp.dto.UpdateDeliveryRequest
 import com.ahold.ctp.service.DeliveryService
 import jakarta.validation.Valid
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import java.lang.IllegalArgumentException
+import java.util.*
 
 @RestController
 @RequestMapping("/deliveries")
@@ -34,6 +33,16 @@ class DeliveryController(@Autowired private val deliveryService:DeliveryService)
 
 
     //@PatchMapping {Updates the certain fields}
+    @PatchMapping("/{id}")
+    fun updateDelivery(@PathVariable id: UUID,
+                       @RequestBody @Valid request: UpdateDeliveryRequest
+    )
+            : ResponseEntity<DeliveryResponse>{
+        val updateDeliveryRes = deliveryService.updateDelivery(id, request);
+        return ResponseEntity.ok(updateDeliveryRes)
+    }
+
+
 
     //@PatchMapping { that does bulk updates}
 
