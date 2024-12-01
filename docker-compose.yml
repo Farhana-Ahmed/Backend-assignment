@@ -9,6 +9,7 @@ services:
     ports:
       - "8080:8080"
     environment:
+      SPRING_PROFILES_ACTIVE: default
       SPRING_DATASOURCE_URL: jdbc:h2:mem:testdb;DB_CLOSE_ON_EXIT=FALSE
       SPRING_DATASOURCE_DRIVER_CLASSNAME: org.h2.Driver
       SPRING_DATASOURCE_USERNAME: sa
@@ -16,10 +17,4 @@ services:
       SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.H2Dialect
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_JPA_SHOW_SQL: true
-      web-allow-others: true
-    networks:
-      - backend_network
-
-networks:
-  backend_network:
-    driver: bridge
+#    SPRING_H2_CONSOLE_SETTINGS_WEB_ALLOW_OTHERS: true
