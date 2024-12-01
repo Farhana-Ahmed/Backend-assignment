@@ -21,5 +21,12 @@ class GlobalExceptionHandler {
         return ResponseEntity(error, HttpStatus.BAD_REQUEST)
     }
 
+    @ExceptionHandler(IllegalArgumentException :: class)
+    fun handleIllegalArgumentException(ex:IllegalArgumentException):
+            ResponseEntity<Map<String,String>>{
+        val errorResponse = mapOf("message" to (ex.message ?: "Invalid request"))
+        return ResponseEntity(errorResponse,HttpStatus.BAD_REQUEST)
+    }
+
 
 }

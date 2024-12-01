@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull
 import java.util.*
 
 data class UpdateDeliveryRequest(
-//    val id: UUID,
+    val id: UUID,
 
     val finishedAt: String ?= null,
 

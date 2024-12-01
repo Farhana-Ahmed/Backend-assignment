@@ -4,7 +4,6 @@ import com.ahold.ctp.dto.*
 import com.ahold.ctp.model.Delivery
 import com.ahold.ctp.model.Status
 import com.ahold.ctp.repository.DeliveryRepository
-import org.hibernate.event.internal.DefaultLoadEventListener
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.OffsetDateTime
@@ -20,7 +19,8 @@ class DeliveryService(@Autowired private val deliveryRepository:DeliveryReposito
         val delivery = Delivery(
             vehicleId = createDeliveryRequest.vehicleId,
             startedAt = startedAtDateTime,
-            status = createDeliveryRequest.status.name
+            status = createDeliveryRequest.status.name,
+            id=UUID.randomUUID()
         );
         val savedDelivery = deliveryRepository.save(delivery);
         val formattedStartedAt = savedDelivery.startedAt.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
@@ -70,9 +70,37 @@ class DeliveryService(@Autowired private val deliveryRepository:DeliveryReposito
     }
 
     // list of deliveries update \
-    fun updateDeliveries(request: List<UpdateDeliveryRequest>)
-    :List<DeliveryResponse>{
-        return listOf()
+//
+    fun updateDeliveries(request: List<UpdateDeliveryRequest>): List<DeliveryResponse> {
+        return request.map { updateRequest ->
+            val delivery = deliveryRepository.findById(updateRequest.id)
+                .orElseThrow { IllegalArgumentException("Delivery with id ${updateRequest.id} not found") }
+
+            if (updateRequest.status == Status.DELIVERED && updateRequest.finishedAt == null) {
+                throw IllegalArgumentException("finishedAt must be provided when status is DELIVERED")
+            }
+            if (updateRequest.status == Status.IN_PROGRESS && updateRequest.finishedAt != null) {
+                throw IllegalArgumentException("finishedAt must not be provided when status is IN_PROGRESS")
+            }
+
+
+            delivery.status = updateRequest.status.name
+            if (updateRequest.finishedAt != null) {
+                delivery.finishedAt = OffsetDateTime.parse(updateRequest.finishedAt)
+            }
+
+            // Save the updated delivery
+            val updatedDelivery = deliveryRepository.save(delivery)
+
+            // Return the updated delivery as a response
+            DeliveryResponse(
+                id = updatedDelivery.id!!,
+                vehicleId = updatedDelivery.vehicleId,
+                startedAt = updatedDelivery.startedAt.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+                finishedAt = updatedDelivery.finishedAt?.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+                status = updatedDelivery.status
+            )
+        }
     }
 
     //calculates the business summary
@@ -82,8 +110,9 @@ class DeliveryService(@Autowired private val deliveryRepository:DeliveryReposito
             averageMinutesBetweenDeliveryStart = 240
         )
     }
-
-
-
-
 }
+
+
+
+
+

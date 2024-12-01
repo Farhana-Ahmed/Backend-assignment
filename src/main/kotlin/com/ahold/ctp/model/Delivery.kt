@@ -15,7 +15,7 @@ data class Delivery(
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    val id: UUID? =null,
+    val id: UUID,
 
     @Column(nullable = false)
     val vehicleId:String = "",
@@ -31,7 +31,7 @@ data class Delivery(
     )
 {
     constructor() : this(
-        id = null,
+        id = UUID.randomUUID(),
         vehicleId = "",
         startedAt = OffsetDateTime.now(),
         finishedAt = null,
