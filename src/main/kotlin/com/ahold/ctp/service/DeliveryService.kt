@@ -1,10 +1,8 @@
 package com.ahold.ctp.service
 
-import com.ahold.ctp.dto.BusinessSummaryReponse
-import com.ahold.ctp.dto.CreateDeliveryRequest
-import com.ahold.ctp.dto.DeliveryResponse
-import com.ahold.ctp.dto.UpdateDeliveryRequest
+import com.ahold.ctp.dto.*
 import com.ahold.ctp.model.Delivery
+import com.ahold.ctp.model.Status
 import com.ahold.ctp.repository.DeliveryRepository
 import org.hibernate.event.internal.DefaultLoadEventListener
 import org.springframework.beans.factory.annotation.Autowired
@@ -36,18 +34,39 @@ class DeliveryService(@Autowired private val deliveryRepository:DeliveryReposito
     }
 
     //busines logic to update the fields
-    fun updateDelivery(id:UUID, request: UpdateDeliveryRequest)
-                :DeliveryResponse{
-        //only finsihed at and status == DELIVERED
+    fun updateDelivery(id: UUID, request: UpdateDeliveryRequest): DeliveryResponse
+    {
+        val delivery = deliveryRepository.findById(id)
+            .orElseThrow{java.lang.IllegalArgumentException ("Delivery with id $id is not found")}
+        when (request.status) {
+            Status.DELIVERED -> {
+                if (request.finishedAt == null) {
+                    throw IllegalArgumentException("finishedAt must be provided for DELIVERED status")
+                }
+                delivery.finishedAt = OffsetDateTime.parse(request.finishedAt)
+            }
+            Status.IN_PROGRESS -> {
+                if (request.finishedAt != null) {
+                    throw IllegalArgumentException("finishedAt must not be provided for IN_PROGRESS status")
+                }
+                delivery.finishedAt = null
+            }
+        }
 
-        return DeliveryResponse(
-            id=UUID.randomUUID(),
-            finishedAt = "",
-            status = "",
-            startedAt = "",
-            vehicleId = ""
-
+        delivery.status = request.status.name
+        val updatedDelivery = deliveryRepository.save(delivery)
+//        val formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+        val response =  DeliveryResponse(
+            id = updatedDelivery.id!!,
+            vehicleId = updatedDelivery.vehicleId,
+            startedAt = updatedDelivery.startedAt
+                .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+            finishedAt = updatedDelivery.finishedAt
+                ?.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+            status = updatedDelivery.status
         )
+        println("Updated Response::: $response")
+        return response
     }
 
     // list of deliveries update \
@@ -58,7 +77,7 @@ class DeliveryService(@Autowired private val deliveryRepository:DeliveryReposito
 
     //calculates the business summary
     fun getBusinessSummary(): BusinessSummaryResponse {
-        return BusinessSummaryReponse(
+        return BusinessSummaryResponse(
             deliveries = 3,
             averageMinutesBetweenDeliveryStart = 240
         )

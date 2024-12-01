@@ -1,5 +1,6 @@
 package com.ahold.ctp.controller
 
+import com.ahold.ctp.dto.BusinessSummaryResponse
 import com.ahold.ctp.dto.CreateDeliveryRequest
 import com.ahold.ctp.dto.DeliveryResponse
 import com.ahold.ctp.dto.UpdateDeliveryRequest
@@ -33,11 +34,12 @@ class DeliveryController(@Autowired private val deliveryService:DeliveryService)
 
 
     //@PatchMapping {Updates the certain fields}
+
     @PatchMapping("/{id}")
     fun updateDelivery(@PathVariable id: UUID,
-                       @RequestBody @Valid request: UpdateDeliveryRequest
-    )
+                       @RequestBody @Valid request: UpdateDeliveryRequest)
             : ResponseEntity<DeliveryResponse>{
+        println("REQUEST*** $request" );
         val updateDeliveryRes = deliveryService.updateDelivery(id, request);
         return ResponseEntity.ok(updateDeliveryRes)
     }

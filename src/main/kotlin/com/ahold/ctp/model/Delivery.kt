@@ -29,3 +29,12 @@ data class Delivery(
     @Column(nullable = false)
     var status:String = "",
     )
+{
+    constructor() : this(
+        id = null,
+        vehicleId = "",
+        startedAt = OffsetDateTime.now(),
+        finishedAt = null,
+        status = ""
+    )
+}
