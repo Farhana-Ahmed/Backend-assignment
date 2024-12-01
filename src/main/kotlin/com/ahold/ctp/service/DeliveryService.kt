@@ -36,68 +36,28 @@ class DeliveryService(@Autowired private val deliveryRepository:DeliveryReposito
     }
 
     //business logic to update the fields
-    fun updateDelivery(id: UUID, request: UpdateDeliveryRequest): DeliveryResponse {
-        val delivery = deliveryRepository.findById(id)
-            .orElseThrow { java.lang.IllegalArgumentException("Delivery with id $id is not found") }
-        when (request.status) {
-            Status.DELIVERED -> {
-                if (request.finishedAt == null) {
-                    throw IllegalArgumentException("finishedAt must be provided for DELIVERED status")
-                }
-                delivery.finishedAt = OffsetDateTime.parse(request.finishedAt)
-            }
-
-            Status.IN_PROGRESS -> {
-                if (request.finishedAt != null) {
-                    throw IllegalArgumentException("finishedAt must not be provided for IN_PROGRESS status")
-                }
-                delivery.finishedAt = null
-            }
+    fun updateDelivery(id: UUID?, finishedAt: OffsetDateTime?, status: String): Delivery {
+        if (id == null) {
+            throw IllegalArgumentException("ID must not be null")
         }
-        delivery.status = request.status.name
-        val updatedDelivery = deliveryRepository.save(delivery)
-        return DeliveryResponse(
-            id = updatedDelivery.id.toString(),
-            vehicleId = updatedDelivery.vehicleId,
-            startedAt = updatedDelivery.startedAt
-                .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
-            finishedAt = updatedDelivery.finishedAt
-                ?.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
-            status = updatedDelivery.status
-        )
+        val delivery = deliveryRepository.findById(id).orElseThrow { NoSuchElementException("Delivery not found") }
+
+        if (status == Status.DELIVERED.name && finishedAt == null) {
+            throw IllegalArgumentException("finishedAt is required for DELIVERED status")
+        }
+
+        delivery.finishedAt = finishedAt
+        delivery.status = status
+        return deliveryRepository.save(delivery)
     }
     // list of deliveries update
-    fun updateDeliveries(request: List<UpdateDeliveryRequest>): List<DeliveryResponse> {
-        return request.map { updateRequest ->
-
-            val delivery = deliveryRepository.findById(updateRequest.id)
-                .orElseThrow { IllegalArgumentException("Delivery with id ${updateRequest.id} not found") }
-            if (updateRequest.status == Status.DELIVERED && updateRequest.finishedAt == null) {
-                throw IllegalArgumentException("finishedAt must be provided when status is DELIVERED")
-            }
-            if (updateRequest.status == Status.IN_PROGRESS && updateRequest.finishedAt != null) {
-                throw IllegalArgumentException("finishedAt must not be provided when status is IN_PROGRESS")
-            }
-            delivery.status = updateRequest.status.name
-            if (updateRequest.finishedAt != null) {
-                delivery.finishedAt = OffsetDateTime.parse(updateRequest.finishedAt)
-            }
-            val updatedDelivery = deliveryRepository.save(delivery)
-            DeliveryResponse(
-                id = updatedDelivery.id.toString(),
-                vehicleId = updatedDelivery.vehicleId,
-                startedAt = updatedDelivery.startedAt.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
-                finishedAt = updatedDelivery.finishedAt?.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
-                status = updatedDelivery.status
-            )
-        }
+    fun bulkUpdateDeliveries(updates: List<Delivery>): List<Delivery> {
+        return updates.map { updateDelivery(it.id, it.finishedAt, it.status) }
     }
 
     //calculates the business summary
     fun getBusinessSummary(): BusinessSummaryResponse {
         val amsterdamZone = ZoneId.of("Europe/Amsterdam")
-
-
         val nowInAmsterdam = OffsetDateTime.now(amsterdamZone)
         val yesterdayStart = nowInAmsterdam.minusDays(1).toLocalDate().atStartOfDay(amsterdamZone).toOffsetDateTime()
         val yesterdayEnd = yesterdayStart.plusDays(1)

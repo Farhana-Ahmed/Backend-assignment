@@ -3,7 +3,8 @@ package com.ahold.ctp.controller
 import com.ahold.ctp.dto.BusinessSummaryResponse
 import com.ahold.ctp.dto.CreateDeliveryRequest
 import com.ahold.ctp.dto.DeliveryResponse
-import com.ahold.ctp.dto.UpdateDeliveryRequest
+import com.ahold.ctp.model.Delivery
+import com.ahold.ctp.model.Status
 import com.ahold.ctp.service.DeliveryService
 import jakarta.validation.Valid
 import org.springframework.beans.factory.annotation.Autowired
@@ -11,6 +12,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.lang.IllegalArgumentException
+import java.time.OffsetDateTime
 import java.util.*
 
 @RestController
@@ -36,19 +38,18 @@ class DeliveryController(@Autowired private val deliveryService:DeliveryService)
 
     @PatchMapping("/{id}")
     fun updateDelivery(@PathVariable id: UUID,
-                       @RequestBody @Valid request: UpdateDeliveryRequest)
-            : ResponseEntity<DeliveryResponse>{
-        val updateDeliveryRes = deliveryService.updateDelivery(id, request);
-        return ResponseEntity.ok(updateDeliveryRes)
+                       @RequestBody @Valid body: Map<String, Any>)
+            : Delivery {
+        val finishedAt = body["finishedAt"]?.let { OffsetDateTime.parse(it as String) }
+        val status = Status.valueOf(body["status"] as String)
+        return deliveryService.updateDelivery(id, finishedAt, status.name)
     }
 
-    //@PatchMapping { that does bulk updates}
 
+    //@PatchMapping { that does bulk updates}
     @PatchMapping("/bulk-update")
-    fun updateMultipleDeliveries(@RequestBody @Valid request: List<UpdateDeliveryRequest>)
-            :ResponseEntity<List<DeliveryResponse>>{
-        val deliveriesResponse = deliveryService.updateDeliveries(request)
-        return ResponseEntity.ok(deliveriesResponse)
+    fun updateBulkDeliveries(@RequestBody @Valid deliveries: List<Delivery>): List<Delivery> {
+        return deliveryService.bulkUpdateDeliveries(deliveries)
     }
 
     //GetMapping {Calculates the business zummary}
@@ -57,5 +58,6 @@ class DeliveryController(@Autowired private val deliveryService:DeliveryService)
         val summary = deliveryService.getBusinessSummary()
         return ResponseEntity.ok(summary)
     }
+
 
 }
