@@ -20,7 +20,6 @@ class DeliveryController(@Autowired private val deliveryService:DeliveryService)
     //@PostMapping {creates the delivery}
     @PostMapping
     fun createDelivery(@Valid @RequestBody createDeliveryRequest: CreateDeliveryRequest)
-
          :ResponseEntity<DeliveryResponse>{
         return try {
             val deliveryResponse = deliveryService.createDelivery(
@@ -39,7 +38,6 @@ class DeliveryController(@Autowired private val deliveryService:DeliveryService)
     fun updateDelivery(@PathVariable id: UUID,
                        @RequestBody @Valid request: UpdateDeliveryRequest)
             : ResponseEntity<DeliveryResponse>{
-        println("REQUEST*** $request" );
         val updateDeliveryRes = deliveryService.updateDelivery(id, request);
         return ResponseEntity.ok(updateDeliveryRes)
     }
