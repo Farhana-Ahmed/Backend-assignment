@@ -19,7 +19,6 @@ data class Delivery(
     @Column
     var finishedAt: OffsetDateTime?=null,
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     var status:String ,
     )
