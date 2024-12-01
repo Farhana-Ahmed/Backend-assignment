@@ -6,7 +6,9 @@ import com.ahold.ctp.model.Status
 import com.ahold.ctp.repository.DeliveryRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.Duration
 import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
 
@@ -20,12 +22,12 @@ class DeliveryService(@Autowired private val deliveryRepository:DeliveryReposito
             vehicleId = createDeliveryRequest.vehicleId,
             startedAt = startedAtDateTime,
             status = createDeliveryRequest.status.name,
-            id=UUID.randomUUID()
+
         );
         val savedDelivery = deliveryRepository.save(delivery);
         val formattedStartedAt = savedDelivery.startedAt.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
         return DeliveryResponse(
-            id = savedDelivery.id!!,
+            id = savedDelivery.id.toString(),
             vehicleId = savedDelivery.vehicleId,
             startedAt = formattedStartedAt,
             finishedAt = savedDelivery.finishedAt?.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
@@ -57,7 +59,7 @@ class DeliveryService(@Autowired private val deliveryRepository:DeliveryReposito
         val updatedDelivery = deliveryRepository.save(delivery)
 //        val formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
         val response =  DeliveryResponse(
-            id = updatedDelivery.id!!,
+            id = updatedDelivery.id.toString(),
             vehicleId = updatedDelivery.vehicleId,
             startedAt = updatedDelivery.startedAt
                 .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
@@ -87,7 +89,7 @@ class DeliveryService(@Autowired private val deliveryRepository:DeliveryReposito
             }
             val updatedDelivery = deliveryRepository.save(delivery)
             DeliveryResponse(
-                id = updatedDelivery.id,
+                id = updatedDelivery.id.toString(),
                 vehicleId = updatedDelivery.vehicleId,
                 startedAt = updatedDelivery.startedAt.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
                 finishedAt = updatedDelivery.finishedAt?.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
@@ -98,12 +100,38 @@ class DeliveryService(@Autowired private val deliveryRepository:DeliveryReposito
 
     //calculates the business summary
     fun getBusinessSummary(): BusinessSummaryResponse {
+        val amsterdamZone = ZoneId.of("Europe/Amsterdam")
+
+
+        val nowInAmsterdam = OffsetDateTime.now(amsterdamZone)
+        val yesterdayStart = nowInAmsterdam.minusDays(1).toLocalDate().atStartOfDay(amsterdamZone).toOffsetDateTime()
+        val yesterdayEnd = yesterdayStart.plusDays(1)
+        println("Time range: $yesterdayStart to $yesterdayEnd")
+
+        val deliveries = deliveryRepository.findAllByStartedAtBetween(
+            yesterdayStart,
+            yesterdayEnd
+        )
+        val totalDeliveries = deliveries.size
+        val averageMinutesBetweenDeliveryStart = if (totalDeliveries > 1) {
+            val sortedStartTimes = deliveries.map { it.startedAt }.sorted()
+
+            val totalMinutes = sortedStartTimes.zipWithNext { start, next ->
+                Duration.between(start, next).toMinutes()
+            }.sum()
+            println("Total minutes $totalMinutes")
+
+            totalMinutes / (totalDeliveries - 1)
+        } else {
+            0
+        }
 
         return BusinessSummaryResponse(
-            deliveries = 3,
-            averageMinutesBetweenDeliveryStart = 240
+            deliveries = totalDeliveries,
+            averageMinutesBetweenDeliveryStart = averageMinutesBetweenDeliveryStart
         )
     }
+
 }
 
 

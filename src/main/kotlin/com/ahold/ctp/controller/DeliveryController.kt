@@ -54,10 +54,10 @@ class DeliveryController(@Autowired private val deliveryService:DeliveryService)
     }
 
     //GetMapping {Calculates the business zummary}
-//    @GetMapping("/business-summary")
-//    fun getBusinessSummary(): ResponseEntity<BusinessSummaryResponse> {
-//        val summary = deliveryService.getBusinessSummary()
-//        return ResponseEntity.ok(summary)
-//    }
+    @GetMapping("/business-summary")
+    fun getBusinessSummary(): ResponseEntity<BusinessSummaryResponse> {
+        val summary = deliveryService.getBusinessSummary()
+        return ResponseEntity.ok(summary)
+    }
 
 }

@@ -10,7 +10,7 @@ data class DeliveryResponse(
 //    "finishedAt": null,
 //    "status": "IN_PROGRESS"
 
-val id: UUID,
+val id: String,
       val vehicleId: String,
     val startedAt:String,
     val finishedAt:String?,
