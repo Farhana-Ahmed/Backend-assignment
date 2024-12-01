@@ -42,9 +42,20 @@ class DeliveryController(@Autowired private val deliveryService:DeliveryService)
         return ResponseEntity.ok(updateDeliveryRes)
     }
 
-
-
     //@PatchMapping { that does bulk updates}
 
+    @PatchMapping("/bulk-update")
+    fun updateMultipleDeliveries(@RequestBody @Valid request: List<UpdateDeliveryRequest>)
+            :ResponseEntity<List<DeliveryResponse>>{
+        val deliveriesResponse = deliveryService.updateDeliveries(request)
+        return ResponseEntity.ok(deliveriesResponse)
+    }
+
     //GetMapping {Calculates the business zummary}
+    @GetMapping("/business-summary")
+    fun getBusinessSummary(): ResponseEntity<BusinessSummaryResponse> {
+        val summary = deliveryService.getBusinessSummary()
+        return ResponseEntity.ok(summary)
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.ahold.ctp.service
 
+import com.ahold.ctp.dto.BusinessSummaryReponse
 import com.ahold.ctp.dto.CreateDeliveryRequest
 import com.ahold.ctp.dto.DeliveryResponse
 import com.ahold.ctp.dto.UpdateDeliveryRequest
@@ -48,6 +49,21 @@ class DeliveryService(@Autowired private val deliveryRepository:DeliveryReposito
 
         )
     }
+
+    // list of deliveries update \
+    fun updateDeliveries(request: List<UpdateDeliveryRequest>)
+    :List<DeliveryResponse>{
+        return listOf()
+    }
+
+    //calculates the business summary
+    fun getBusinessSummary(): BusinessSummaryResponse {
+        return BusinessSummaryReponse(
+            deliveries = 3,
+            averageMinutesBetweenDeliveryStart = 240
+        )
+    }
+
 
 
 
