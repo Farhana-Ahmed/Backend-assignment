@@ -3,6 +3,7 @@ package com.ahold.ctp.controller
 import com.ahold.ctp.dto.CreateDeliveryRequest
 import com.ahold.ctp.dto.DeliveryResponse
 import com.ahold.ctp.service.DeliveryService
+import jakarta.validation.Valid
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -18,13 +19,17 @@ class DeliveryController(@Autowired private val deliveryService:DeliveryService)
 
     //@PostMapping {creates the delivery}
     @PostMapping
-    fun createDelivery(@RequestBody createDeliveryRequest: CreateDeliveryRequest)
+    fun createDelivery(@Valid @RequestBody createDeliveryRequest: CreateDeliveryRequest)
 
          :ResponseEntity<DeliveryResponse>{
-         val deliveryResponse = deliveryService.createDelivery(
-            createDeliveryRequest
-        )
-       return  ResponseEntity(deliveryResponse, HttpStatus.CREATED)
+        return try {
+            val deliveryResponse = deliveryService.createDelivery(
+                createDeliveryRequest
+            )
+            ResponseEntity(deliveryResponse,HttpStatus.CREATED)
+        } catch (e: IllegalArgumentException){
+            ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
     }
 
 
