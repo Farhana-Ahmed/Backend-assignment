@@ -50,10 +50,35 @@ class DeliveryService(@Autowired private val deliveryRepository:DeliveryReposito
         delivery.status = status
         return deliveryRepository.save(delivery)
     }
-    // list of deliveries update
-    fun bulkUpdateDeliveries(updates: List<Delivery>): List<Delivery> {
-        return updates.map { updateDelivery(it.id, it.finishedAt, it.status) }
+
+    fun bulkUpdateDeliveries(updates: List<UpdateDeliveryRequest>): List<DeliveryResponse> {
+        return updates.map { updateRequest ->
+            val delivery = deliveryRepository.findById(updateRequest.id)
+                .orElseThrow { IllegalArgumentException("Delivery with id ${updateRequest.id} not found") }
+
+            if (updateRequest.status == Status.DELIVERED && updateRequest.finishedAt == null) {
+                throw IllegalArgumentException("finishedAt must be provided for DELIVERED status")
+            }
+
+            if (updateRequest.status == Status.IN_PROGRESS && updateRequest.finishedAt != null) {
+                throw IllegalArgumentException("finishedAt must not be provided for IN_PROGRESS status")
+            }
+
+            delivery.status = updateRequest.status.name
+            delivery.finishedAt = updateRequest.finishedAt?.let { OffsetDateTime.parse(it) }
+
+            val updatedDelivery = deliveryRepository.save(delivery)
+
+            DeliveryResponse(
+                id = updatedDelivery.id.toString(),
+                vehicleId = updatedDelivery.vehicleId,
+                startedAt = updatedDelivery.startedAt.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+                finishedAt = updatedDelivery.finishedAt?.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+                status = updatedDelivery.status
+            )
+        }
     }
+
 
     //calculates the business summary
     fun getBusinessSummary(): BusinessSummaryResponse {
@@ -80,7 +105,6 @@ class DeliveryService(@Autowired private val deliveryRepository:DeliveryReposito
         } else {
             0
         }
-
         return BusinessSummaryResponse(
             deliveries = totalDeliveries,
             averageMinutesBetweenDeliveryStart = averageMinutesBetweenDeliveryStart
